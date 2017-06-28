@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -15,6 +16,12 @@ func GetAccidentsCount(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		return
 	}
 
+	yearWhere := `WHERE SUBSTR(ACCIDENT_DATE, 1, 4) = "2017"`
+	params := r.URL.Query()
+	if yearList, ok := params["year"]; ok {
+		yearWhere = `WHERE SUBSTR(ACCIDENT_DATE, 1, 4) IN ("` + strings.Join(yearList, `", "`) + `")`
+	}
+
 	type accidentCountOfTime struct {
 		Count int    `json:"num_of_accidents"`
 		Time  string `json:"time_of_day"`
@@ -22,7 +29,8 @@ func GetAccidentsCount(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 
 	var accidentCountTimeSeries []accidentCountOfTime
 
-	rows, err := db.Query("select count(OBJECTID), ACCIDENT_TIME from crashes_last_five_years group by ACCIDENT_TIME order by ACCIDENT_TIME asc")
+	sql := "SELECT COUNT(OBJECTID), ACCIDENT_TIME FROM crashes_last_five_years " + yearWhere + " GROUP BY ACCIDENT_TIME ORDER BY ACCIDENT_TIME ASC"
+	rows, err := db.Query(sql)
 	if err != nil {
 		log.Fatal(err)
 	}

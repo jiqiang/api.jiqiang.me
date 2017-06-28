@@ -12,6 +12,6 @@ func main() {
 	viccrashes.InitDB("sqlite3", "./viccrashes.sqlite3")
 
 	router := httprouter.New()
-	router.GET("/viccrashes/accidents/count", viccrashes.GetAccidentsCount)
+	router.GET("/viccrashes/count", viccrashes.GetAccidentsCount)
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
